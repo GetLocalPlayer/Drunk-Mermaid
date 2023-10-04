@@ -1,0 +1,26 @@
+{
+  "name": "drunkmermaid",
+  "version": "1.0.0",
+  "description": "Music bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "GetLocalPlayer",
+  "license": "ISC",
+  "dependencies": {
+    "@discord-player/extractor": "^4.4.4",
+    "@discordjs/voice": "^0.16.0",
+    "avconv": "^3.1.0",
+    "discord-player": "^6.6.4",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "ffmpeg": "^0.0.4",
+    "mediaplex": "^0.0.8",
+    "sodium-native": "^4.0.4",
+    "youtube-ext": "^1.1.14"
+  },
+  "devDependencies": {
+    "eslint": "^8.49.0"
+  }
+}
