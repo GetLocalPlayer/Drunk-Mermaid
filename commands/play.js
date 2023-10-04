@@ -66,7 +66,7 @@ player.events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
 player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
 	if (!queue.metadata) return
 	if (!queue.metadata.message) return
-	
+
 	const channel = queue.metadata.message.channel
 	await channel.send(`> :clock1:  **${tracks.length}** tracks have been added in the queue.
 	_ _`)
