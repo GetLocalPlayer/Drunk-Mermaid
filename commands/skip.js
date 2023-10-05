@@ -1,4 +1,11 @@
 const { usePlayer } = require("discord-player");
+const { EmbedBuilder } = require("discord.js")
+
+
+const embedPattern = {
+	"type": "rich",
+	"color": 0x00ffe6,
+}
 
 
 module.exports = {
@@ -7,23 +14,31 @@ module.exports = {
 
 	callback: async (message) => {
 		const voiceChannel = message.member.voice.channel
+		const embed = EmbedBuilder.from(embedPattern)
 		if (!(voiceChannel)) {
-			await message.reply("> You are not connected to a voice channel")
+			embed.setTitle(":x:  You are not joined to any voice channel.")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
 		const queuePlayer = usePlayer(message.guildId)
 
 		if (!queuePlayer) {
-			await message.reply("> Nothing is currently playing.")
+			embed.setTitle(":x:  Nothing is currently playing")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
 		if (queuePlayer.skip()) {
-			message.channel.send(`> :track_next: **Skip:** _${queuePlayer.queue.currentTrack.title}_`)
+			embed.setTitle(":track_next:  Skip current track")
+			await message.reply({ "embeds": [embed] })
 		}
 		else {
-			await message.reply("> No track to skip.")
+			embed.setTitle(":x:  There's no track to skip")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 		}
 	},
 }

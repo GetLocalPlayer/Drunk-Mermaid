@@ -11,11 +11,12 @@ module.exports = {
 	callback: async (message) => {
 		const channel = message.member.voice.channel
 		if (!(channel)) {
-			await message.reply("You must join a voice channel first!")
 			return
 		}
 
-		if (!usePlayer()) {
+		const queuePlayer = usePlayer()
+
+		if (!queuePlayer) {
 			await useMainPlayer().play(channel, SOUND_PATH, {
 				searchEngine: QueryType.FILE,
 			})

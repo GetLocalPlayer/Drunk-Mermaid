@@ -1,4 +1,11 @@
 const { useMainPlayer, QueryType, GuildQueueEvent } = require("discord-player");
+const { EmbedBuilder } = require ("discord.js")
+
+
+const embedPattern = {
+	"type": "rich",
+	"color": 0x00ffe6,
+}
 
 
 module.exports = {
@@ -8,12 +15,18 @@ module.exports = {
 	callback: async (message, url) => {
 		const voiceChannel = message.member.voice.channel
 		if (!(voiceChannel)) {
-			await message.reply("> You are not connected to a voice channel")
+			const embed = EmbedBuilder.from(embedPattern)
+				.setTitle(":x:  You are not joined to any voice channel.")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
 		if (!url) {
-			message.reply("> You must provide a valid link")
+			const embed = EmbedBuilder.from(embedPattern)
+				.setTitle(":x:  No valid link or request provided.")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
@@ -22,6 +35,7 @@ module.exports = {
 		try {
 			await player.play(voiceChannel, url, {
 				searchEngine: QueryType.AUTO,
+				blockExtractors: QueryType.FILE,
 				nodeOptions: {
 					metadata: {
 						message: message,
@@ -31,7 +45,10 @@ module.exports = {
 		}
 		catch (err) {
 			if (err.name == "ERR_NO_RESULT") {
-				await message.reply("> No track found")
+				const embed = EmbedBuilder.from(embedPattern)
+					.setTitle(":x:  No track found.")
+					.setColor(0xff0000)
+				await message.reply({ "embeds": [embed] })
 				return
 			}
 			return console.log(err)
@@ -47,20 +64,50 @@ player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	await channel.send(`> :arrow_forward:  _${track.title}_
-		> **Author:** _${track.author}_
-		> **Duration:** _${track.duration}_
-		_ _`)
+	const embed = EmbedBuilder.from(embedPattern)
+		.setTitle(":musical_note:  Start playing")
+		.addFields([
+			{
+				"name": " ",
+				"value": track.title,
+				"inline": false,
+			},
+			{
+				"name": "Duration:",
+				"value": track.duration,
+				"inline": false,
+			},
+		])
+		.setThumbnail(track.thumbnail)
+	await channel.send({ "embeds": [embed] })
 })
 
 player.events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
 	if (!queue.metadata) return
 	if (!queue.metadata.message) return
+	if (!queue.currentTrack) return
 
-	if (queue.tracks.size === 1) return
 	const channel = queue.metadata.message.channel
-	await channel.send(`> :clock1:  **Added in the queue:** ${track.title}.
-	_ _`)
+	const embed = EmbedBuilder.from(embedPattern)
+		.setTitle(":notes:  Added in the queue")
+		.addFields([
+			{
+				"name": " ",
+				"value": track.title,
+				"inline": false,
+			},
+			{
+				"name": "Tracks in total:",
+				"value": `${queue.getSize() + 1}`,
+				"inline": true,
+			},
+			{
+				"name": "Total duration:",
+				"value": queue.durationFormatted,
+				"inline": true,
+			},
+		])
+	await channel.send({ "embeds": [embed] })
 })
 
 player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
@@ -68,6 +115,19 @@ player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	await channel.send(`> :clock1:  **${tracks.length}** tracks have been added in the queue.
-	_ _`)
+	const embed = EmbedBuilder.from(embedPattern)
+		.setTitle(`:notes:  ${tracks.length} tracks have been added in the queue	`)
+		.addFields([
+			{
+				"name": "Tracks in total:",
+				"value": `${queue.getSize() + (queue.currentTrack ? 1 : 0)}`,
+				"inline": true,
+			},
+			{
+				"name": "Total duration:",
+				"value": queue.durationFormatted,
+				"inline": true,
+			},
+		])
+	await channel.send({ "embeds": [embed] })
 })

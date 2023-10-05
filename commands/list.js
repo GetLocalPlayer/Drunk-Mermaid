@@ -1,9 +1,16 @@
 const { usePlayer } = require("discord-player");
+const { EmbedBuilder } = require ("discord.js")
 
 
 const MAX_TRACKS_TO_SHOW = 15
 const COMMAND = "list"
 const SUBCOMMAND = "-all"
+
+
+const embedPattern = {
+	"type": "rich",
+	"color": 0x000000,
+}
 
 
 module.exports = {
@@ -12,15 +19,20 @@ module.exports = {
 
 	callback: async (message, subcommand) => {
 		const voiceChannel = message.member.voice.channel
+		let embed = EmbedBuilder.from(embedPattern)
 		if (!(voiceChannel)) {
-			await message.reply("> You are not connected to a voice channel")
+			embed.setTitle(":x:  You are not joined to any voice channel.")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
 		const queuePlayer = usePlayer(message.guildId)
 
 		if (!queuePlayer) {
-			await message.reply("> Nothing is currently playing.")
+			embed.setTitle(":x:  Nothing is currently playing")
+				.setColor(0xff0000)
+			await message.reply({ "embeds": [embed] })
 			return
 		}
 
@@ -28,27 +40,70 @@ module.exports = {
 
 		const tracks = queuePlayer.queue.tracks.toArray()
 
+		if (queuePlayer.queue.currentTrack) {
+			embed.addFields([
+				{
+					"name": ":arrow_forward:  Playing now:",
+					"value": queuePlayer.queue.currentTrack.title,
+					"inline": false,
+				},
+			])
+		}
+
 		let trackCount = 1
-		let msg = `> **Currently tracks in the queue:** ${tracks.length + 1}\n> `
-		msg += `\n> :arrow_forward:  **${trackCount}** ${queuePlayer.queue.currentTrack.title}`
+
+		if (!tracks.length) {
+			embed.addFields([
+				{
+					"name": " ",
+					"value": "No tracks in the queue",
+					"inline": false,
+				},
+			])
+			await message.channel.send({ "embeds": [embed] })
+			return
+		}
+
+		embed.addFields([
+			{
+				"name": " ",
+				"value": " ",
+				"inline": false,
+			},
+			{
+				"name": " ",
+				"value": `:notes:  **Tracks in the queue:** ${tracks.length}\n`,
+				"inline": false,
+			},
+		])
 
 		while (tracks.length) {
 			const spliced = tracks.splice(0, MAX_TRACKS_TO_SHOW - 1)
 			while (spliced.length) {
+				embed.addFields([
+					{
+						"name": " ",
+						"value": `> **${trackCount}.** _${spliced.shift().title}_`,
+						"inline": false,
+					},
+				])
 				trackCount++
-				msg += `\n> **${trackCount}.** _${spliced.shift().title}_`
 			}
 			if (sendDM) {
-				await message.author.send(msg)
-				msg = ""
+				await message.author.send({ "embeds": [embed] })
+				embed = EmbedBuilder.from(embedPattern)
 			}
 			else {
 				if (tracks.length) {
-					msg += `\n>	\n> :warning:  I can show only ${MAX_TRACKS_TO_SHOW} tracks in a server chat at once.`
-					msg += ` To get the whole list in direct messages, use \`${COMMAND} ${SUBCOMMAND}\` command.`
+					embed.addFields([
+						{
+							"name": `:warning:  _I can show only ${MAX_TRACKS_TO_SHOW} tracks in a server chat at once. To get the whole list in direct messages use \`${COMMAND} ${SUBCOMMAND}\` command._`,
+							"value": " ",
+							"inline": false,
+						},
+					])
 				}
-				msg += "\n_ _"
-				await message.reply(msg)
+				await message.channel.send({ "embeds": [embed] })
 				break
 			}
 		}
