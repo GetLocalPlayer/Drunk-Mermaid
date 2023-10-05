@@ -2,31 +2,43 @@ const { useMainPlayer, QueryType, GuildQueueEvent } = require("discord-player");
 const { EmbedBuilder } = require ("discord.js")
 
 
-const embedPattern = {
-	"type": "rich",
-	"color": 0x00ffe6,
+const patterns = {
+	errorNoVoice: {
+		"color": 0xff0000,
+		"type": "rich",
+		"title": ":x:  You are not joined to any voice channel.",
+	},
+	errorInvalidRequest: {
+		"color": 0xff0000,
+		"type": "rich",
+		"title": ":x:  You must provide a valid URL or request",
+	},
+	errorNoTrackFound: {
+		"color": 0xff0000,
+		"type": "rich",
+		"title": ":x:  No track found.",
+	},
+	play: {
+		"color": 0x00ffe6,
+		"type": "rich",
+	},
 }
 
 
 module.exports = {
 	name: "play",
 	description: "will be used as the info for 'help' command",
+	embedPatterns: patterns,
 
 	run: async (message, url) => {
 		const voiceChannel = message.member.voice.channel
 		if (!(voiceChannel)) {
-			const embed = EmbedBuilder.from(embedPattern)
-				.setTitle(":x:  You are not joined to any voice channel.")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorNoVoice)] })
 			return
 		}
 
 		if (!url) {
-			const embed = EmbedBuilder.from(embedPattern)
-				.setTitle(":x:  No valid link or request provided.")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorInvalidRequest)] })
 			return
 		}
 
@@ -45,10 +57,7 @@ module.exports = {
 		}
 		catch (err) {
 			if (err.name == "ERR_NO_RESULT") {
-				const embed = EmbedBuilder.from(embedPattern)
-					.setTitle(":x:  No track found.")
-					.setColor(0xff0000)
-				await message.reply({ "embeds": [embed] })
+				await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorNoTrackFound)] })
 				return
 			}
 			return console.log(err)
@@ -64,7 +73,7 @@ player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(embedPattern)
+	const embed = EmbedBuilder.from(patterns.play)
 		.setTitle(":musical_note:  Start playing")
 		.addFields([
 			{
@@ -88,7 +97,7 @@ player.events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
 	if (!queue.currentTrack) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(embedPattern)
+	const embed = EmbedBuilder.from(patterns.play)
 		.setTitle(":notes:  Added in the queue")
 		.addFields([
 			{
@@ -115,8 +124,8 @@ player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(embedPattern)
-		.setTitle(`:notes:  ${tracks.length} tracks have been added in the queue	`)
+	const embed = EmbedBuilder.from(patterns.play)
+		.setTitle(`:notes:  ${tracks.length} tracks have been added in the queue`)
 		.addFields([
 			{
 				"name": "Tracks in total:",

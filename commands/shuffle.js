@@ -1,10 +1,12 @@
 const { usePlayer } = require("discord-player");
 const { EmbedBuilder } = require("discord.js")
+const { embedPatterns: skipEmbedPatterns } = require("./skip")
+const { embedPatterns: playEmbedPatterns } = require("./play")
 
 
-const embedPattern = {
-	"type": "rich",
+const pattern = {
 	"color": 0x00ffe6,
+	"type": "rich",
 }
 
 
@@ -14,26 +16,23 @@ module.exports = {
 
 	run: async (message) => {
 		const voiceChannel = message.member.voice.channel
-		const embed = EmbedBuilder.from(embedPattern)
+
 		if (!(voiceChannel)) {
-			embed.setTitle(":x:  You are not joined to any voice channel.")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(playEmbedPatterns.errorNoVoice)] })
 			return
 		}
 
 		const queuePlayer = usePlayer(message.guildId)
 
-		if (!queuePlayer) {
-			embed.setTitle(":x:  Nothing is currently playing")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+		if (!queuePlayer || !queuePlayer.queue.currentTrack) {
+			await message.reply({ "embeds": [EmbedBuilder.from(skipEmbedPatterns.errorNothingIsPlaying)] })
 			return
 		}
 
 		if (queuePlayer.queue.getSize() > 1) {
 			queuePlayer.queue.tracks.shuffle()
-			embed.setTitle(":twisted_rightwards_arrows:  Tracks in the queue have been shuffled.")
+			const embed = EmbedBuilder.from(pattern)
+				.setTitle(":twisted_rightwards_arrows:  Tracks in the queue have been shuffled.")
 			await message.channel.send({ "embeds": [embed] })
 		}
 	},

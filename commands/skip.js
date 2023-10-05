@@ -1,39 +1,44 @@
 const { usePlayer } = require("discord-player");
 const { EmbedBuilder } = require("discord.js")
+const { embedPatterns: playEmbedPatterns } = require("./play")
 
 
-const embedPattern = {
-	"type": "rich",
-	"color": 0x00ffe6,
+const patterns = {
+	errorNothingIsPlaying: {
+		"color": 0xff0000,
+		"type": "rich",
+		"title": ":x:  Nothings is currently playing",
+	},
+	skip: {
+		"color": 0x00ffe6,
+		"type": "rich",
+		"title": ":track_next:  Skip current track",
+	},
 }
 
 
 module.exports = {
 	name: "skip",
 	description: "I'll skip currently playing track",
+	embedPatterns: patterns,
 
 	run: async (message) => {
 		const voiceChannel = message.member.voice.channel
-		const embed = EmbedBuilder.from(embedPattern)
+
 		if (!(voiceChannel)) {
-			embed.setTitle(":x:  You are not joined to any voice channel.")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(playEmbedPatterns.errorNoVoice)] })
 			return
 		}
 
 		const queuePlayer = usePlayer(message.guildId)
 
 		if (!queuePlayer || !queuePlayer.queue.currentTrack) {
-			embed.setTitle(":x:  Nothing is currently playing")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorNothingIsPlaying)] })
 			return
 		}
 
 		if (queuePlayer.skip()) {
-			embed.setTitle(":track_next:  Skip current track")
-			await message.channel.send({ "embeds": [embed] })
+			await message.channel.send({ "embeds": [EmbedBuilder.from(patterns.skip)] })
 		}
 	},
 }

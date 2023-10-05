@@ -8,5 +8,7 @@ const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith(".js
 for (const file of commandFiles) {
 	const filePath = path.join(__dirname, file)
 	const cmd = require(filePath)
-	exports[cmd.name.toLowerCase()] = cmd.run
+	if ("run" in cmd && "name" in cmd) {
+		exports[cmd.name.toLowerCase()] = cmd.run
+	}
 }

@@ -1,5 +1,7 @@
 const { usePlayer } = require("discord-player");
 const { EmbedBuilder } = require ("discord.js")
+const { embedPatterns: skipEmbedPatterns } = require ("./skip")
+const { embedPatterns: playEmbedPatterns } = require ("./play")
 
 
 const MAX_TRACKS_TO_SHOW = 15
@@ -7,9 +9,9 @@ const COMMAND = "list"
 const SUBCOMMAND = "-all"
 
 
-const embedPattern = {
+const pattern = {
+	"color": 0x00ffe6,
 	"type": "rich",
-	"color": 0x000000,
 }
 
 
@@ -19,26 +21,22 @@ module.exports = {
 
 	run: async (message, subcommand) => {
 		const voiceChannel = message.member.voice.channel
-		let embed = EmbedBuilder.from(embedPattern)
+
 		if (!(voiceChannel)) {
-			embed.setTitle(":x:  You are not joined to any voice channel.")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+			await message.reply({ "embeds": [EmbedBuilder.from(playEmbedPatterns.errorNoVoice)] })
 			return
 		}
 
 		const queuePlayer = usePlayer(message.guildId)
 
-		if (!queuePlayer) {
-			embed.setTitle(":x:  Nothing is currently playing")
-				.setColor(0xff0000)
-			await message.reply({ "embeds": [embed] })
+		if (!queuePlayer || !queuePlayer.queue.getSize()) {
+			await message.reply({ "embeds": [EmbedBuilder.from(skipEmbedPatterns.errorNothingIsPlaying)] })
 			return
 		}
 
 		const sendDM = subcommand ? subcommand.toLowerCase() === SUBCOMMAND.toLowerCase() : false
-
 		const tracks = queuePlayer.queue.tracks.toArray()
+		let embed = EmbedBuilder.from(pattern)
 
 		if (queuePlayer.queue.currentTrack) {
 			embed.addFields([
@@ -91,7 +89,7 @@ module.exports = {
 			}
 			if (sendDM) {
 				await message.author.send({ "embeds": [embed] })
-				embed = EmbedBuilder.from(embedPattern)
+				embed = EmbedBuilder.from(pattern)
 			}
 			else {
 				if (tracks.length) {
