@@ -33,7 +33,7 @@ module.exports = {
 
 		if (queuePlayer.skip()) {
 			embed.setTitle(":track_next:  Skip current track")
-			await message.reply({ "embeds": [embed] })
+			await message.channel.send({ "embeds": [embed] })
 		}
 	},
 }
