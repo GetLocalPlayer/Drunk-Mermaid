@@ -24,7 +24,7 @@ module.exports = {
 
 		const queuePlayer = usePlayer(message.guildId)
 
-		if (!queuePlayer) {
+		if (!queuePlayer || (!queuePlayer.queue.currentTrack && !queuePlayer.queue.getSize())) {
 			embed.setTitle(":x:  Nothing is currently playing")
 				.setColor(0xff0000)
 			await message.reply({ "embeds": [embed] })
