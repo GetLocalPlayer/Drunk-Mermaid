@@ -24,7 +24,7 @@ module.exports = {
 
 		const queuePlayer = usePlayer(message.guildId)
 
-		if (!queuePlayer) {
+		if (!queuePlayer || !queuePlayer.queue.currentTrack) {
 			embed.setTitle(":x:  Nothing is currently playing")
 				.setColor(0xff0000)
 			await message.reply({ "embeds": [embed] })
@@ -33,11 +33,6 @@ module.exports = {
 
 		if (queuePlayer.skip()) {
 			embed.setTitle(":track_next:  Skip current track")
-			await message.reply({ "embeds": [embed] })
-		}
-		else {
-			embed.setTitle(":x:  There's no track to skip")
-				.setColor(0xff0000)
 			await message.reply({ "embeds": [embed] })
 		}
 	},
