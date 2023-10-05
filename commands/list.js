@@ -17,7 +17,7 @@ module.exports = {
 	name: COMMAND,
 	description: "I'll show the list of tracks currently in the queue",
 
-	callback: async (message, subcommand) => {
+	run: async (message, subcommand) => {
 		const voiceChannel = message.member.voice.channel
 		let embed = EmbedBuilder.from(embedPattern)
 		if (!(voiceChannel)) {

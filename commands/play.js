@@ -12,7 +12,7 @@ module.exports = {
 	name: "play",
 	description: "will be used as the info for 'help' command",
 
-	callback: async (message, url) => {
+	run: async (message, url) => {
 		const voiceChannel = message.member.voice.channel
 		if (!(voiceChannel)) {
 			const embed = EmbedBuilder.from(embedPattern)

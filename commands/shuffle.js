@@ -12,7 +12,7 @@ module.exports = {
 	name: "shuffle",
 	description: "I'll shuffle the tracks in the current playlist",
 
-	callback: async (message) => {
+	run: async (message) => {
 		const voiceChannel = message.member.voice.channel
 		const embed = EmbedBuilder.from(embedPattern)
 		if (!(voiceChannel)) {

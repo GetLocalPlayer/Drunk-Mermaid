@@ -8,7 +8,7 @@ module.exports = {
 	name: "test",
 	description: "I will connect to the voice channel you're currently in to play the test sound",
 
-	callback: async (message) => {
+	run: async (message) => {
 		const channel = message.member.voice.channel
 		if (!(channel)) {
 			return
