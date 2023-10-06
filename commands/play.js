@@ -4,7 +4,7 @@ const { EmbedBuilder } = require ("discord.js");
 
 module.exports = {
 	name: "play",
-	description: "will be used as the info for 'help' command",
+	description: "I'll start playing the track I find by the given link or request, for instance: `dm! play Never Gonna Give You Up`",
 	run: run,
 	checkVoiceChannel: checkVoiceChannel,
 	buildEmbed: buildEmbed,
@@ -151,7 +151,7 @@ async function run(message, url, omitReport) {
 	catch (err) {
 		if (err.name == "ERR_NO_RESULT") {
 			await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNoTrackFound)] })
-			return
+			return [null, null, null, null]
 		}
 		throw err
 	}

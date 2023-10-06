@@ -3,7 +3,7 @@ const { buildEmbed, run: play } = require("./play")
 
 module.exports = {
 	name: "playnext",
-	description: "I'll add the track first in the queue",
+	description: "I'll put the track I find by the given link or request in the begginning of the queue",
 	run: run,
 }
 
@@ -33,7 +33,7 @@ async function reportNextTrack(channel, track) {
 async function run(message, url, omitReport) {
 	const [queue, track, searchResult, extractor] = await play(message, url)
 
-	if (queue.currentTrack !== track) {
+	if (queue && queue.currentTrack !== track) {
 		queue.moveTrack(track, 0)
 		if (!omitReport) await reportNextTrack(message.channel, track)
 	}

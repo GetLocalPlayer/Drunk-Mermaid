@@ -2,7 +2,7 @@ const fs = require("node:fs")
 const path = require("node:path")
 
 
-const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith(".js") && file != "index.js")
+const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith(".js") && file != __filename)
 
 
 for (const file of commandFiles) {
