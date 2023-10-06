@@ -16,17 +16,17 @@ const embedPatterns = {
 		"title": ":no_entry_sign:  Nothings is currently playing",
 	},
 	stop: {
-		color: 0x0000ff,
+		color: 0x3b88c3,
 		type: "rich",
 		title: ":stop_button:  Stop playing",
 	},
 }
 
 
-function checkQueuePlayer(message) {
+async function checkQueuePlayer(message) {
 	const queuePlayer = usePlayer(message.guildId)
 	if (!queuePlayer || !queuePlayer.queue.currentTrack) {
-		message.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)] })
+		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)] })
 		return false
 	}
 	return true
@@ -34,8 +34,8 @@ function checkQueuePlayer(message) {
 
 
 async function run(message) {
-	if (!checkVoiceChannel(message)) return
-	if (!checkQueuePlayer(message)) return
+	if (!await checkVoiceChannel(message)) return
+	if (!await checkQueuePlayer(message)) return
 
 	const queuePlayer = usePlayer(message.guildId)
 

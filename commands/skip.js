@@ -1,5 +1,5 @@
 const { usePlayer } = require("discord-player");
-const { buildEmbed, checkVoiceChannel } = require("./play")
+const { buildEmbed, checkVoiceChannel, reportPlayerStart } = require("./play")
 const { checkQueuePlayer } = require("./stop")
 
 
@@ -19,11 +19,16 @@ const embedPatterns = {
 
 
 async function run(message) {
-	if (!checkVoiceChannel(message)) return
-	if (!checkQueuePlayer(message)) return
+	if (!await checkVoiceChannel(message)) return
+	if (!await checkQueuePlayer(message)) return
 
-	if (usePlayer(message.guildId).skip()) {
+	const queuePlayer = usePlayer(message.guildId)
+
+	if (queuePlayer.skip()) {
 		await message.channel.send({ "embeds": [buildEmbed(embedPatterns.skip)] })
+		if (queuePlayer.queue.currentTrack) {
+			await reportPlayerStart(message.channel, queuePlayer.queue.currentTrack)
+		}
 	}
 }
 

@@ -11,15 +11,15 @@ module.exports = {
 
 const embedPatterns = {
 	shuffle: {
-		"color": 0x0000ff,
+		"color": 0x3b88c3,
 		"type": "rich",
 		"title": ":twisted_rightwards_arrows:  Tracks in the queue have been shuffled.",
 	},
 }
 
 async function run(message) {
-	if (!checkVoiceChannel(message)) return
-	if (!checkQueuePlayer(message)) return
+	if (!await checkVoiceChannel(message)) return
+	if (!await checkQueuePlayer(message)) return
 
 	const queuePlayer = usePlayer(message.guildId)
 

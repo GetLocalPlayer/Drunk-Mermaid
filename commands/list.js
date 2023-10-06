@@ -24,8 +24,8 @@ const embedPatterns = {
 
 
 async function run(message, subcommand) {
-	if (!checkVoiceChannel(message)) return
-	if (!checkQueuePlayer(message)) return
+	if (!await checkVoiceChannel(message)) return
+	if (!await checkQueuePlayer(message)) return
 
 	const queuePlayer = usePlayer(message.guildId)
 
