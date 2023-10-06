@@ -2,78 +2,89 @@ const { useMainPlayer, QueryType, GuildQueueEvent } = require("discord-player");
 const { EmbedBuilder } = require ("discord.js")
 
 
-const patterns = {
-	errorNoVoice: {
-		"color": 0xff0000,
-		"type": "rich",
-		"title": ":x:  You are not joined to any voice channel.",
-	},
-	errorInvalidRequest: {
-		"color": 0xff0000,
-		"type": "rich",
-		"title": ":x:  You must provide a valid URL or request",
-	},
-	errorNoTrackFound: {
-		"color": 0xff0000,
-		"type": "rich",
-		"title": ":x:  No track found.",
-	},
-	play: {
-		"color": 0x00ffe6,
-		"type": "rich",
-	},
-}
-
-
 module.exports = {
 	name: "play",
 	description: "will be used as the info for 'help' command",
-	embedPatterns: patterns,
-
-	run: async (message, url) => {
-		const voiceChannel = message.member.voice.channel
-		if (!(voiceChannel)) {
-			await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorNoVoice)] })
-			return
-		}
-
-		if (!url) {
-			await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorInvalidRequest)] })
-			return
-		}
-
-		const player = useMainPlayer()
-
-		try {
-			await player.play(voiceChannel, url, {
-				searchEngine: QueryType.AUTO,
-				blockExtractors: QueryType.FILE,
-				nodeOptions: {
-					metadata: {
-						message: message,
-					},
-				},
-			})
-		}
-		catch (err) {
-			if (err.name == "ERR_NO_RESULT") {
-				await message.reply({ "embeds": [EmbedBuilder.from(patterns.errorNoTrackFound)] })
-				return
-			}
-			return console.log(err)
-		}
-	},
+	run: run,
+	checkVoiceChannel: checkVoiceChannel,
+	buildEmbed: buildEmbed,
 }
 
 
+const embedPatterns = {
+	errorNoVoice: {
+		color: 0xff0000,
+		type: "rich",
+		title: ":no_entry_sign:  You are not joined to any voice channel.",
+	},
+	errorInvalidRequest: {
+		color: 0xff0000,
+		type: "rich",
+		title: ":no_entry_sign:  You must provide a valid URL or request",
+	},
+	errorNoTrackFound: {
+		color: 0xff0000,
+		type: "rich",
+		title: ":no_entry_sign:  No track found.",
+	},
+	play: {
+		color: 0x00ffe6,
+		type: "rich",
+	},
+}
+
 const player = useMainPlayer()
+
+function buildEmbed(pattern) {
+	return EmbedBuilder.from(pattern)
+}
+
+
+function checkVoiceChannel(message) {
+	const voiceChannel = message.member.voice.channel
+	if (!(voiceChannel)) {
+		message.reply({ "embeds": [buildEmbed(embedPatterns.errorNoVoice)] })
+		return false
+	}
+	return true
+}
+
+async function run(message, url) {
+	if (!checkVoiceChannel(message)) return
+
+	if (!url) {
+		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorInvalidRequest)] })
+		return
+	}
+
+	const voiceChannel = message.member.voice.channel
+
+	try {
+		await player.play(voiceChannel, url, {
+			searchEngine: QueryType.AUTO,
+			blockExtractors: QueryType.FILE,
+			nodeOptions: {
+				metadata: {
+					message: message,
+				},
+			},
+		})
+	}
+	catch (err) {
+		if (err.name == "ERR_NO_RESULT") {
+			await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNoTrackFound)] })
+			return
+		}
+		return console.log(err)
+	}
+}
 
 player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
 	if (!queue.metadata) return
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(patterns.play)
+	const embed = EmbedBuilder.from(embedPatterns.play)
 		.setTitle(":musical_note:  Start playing")
 		.addFields([
 			{
@@ -97,7 +108,7 @@ player.events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
 	if (!queue.currentTrack) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(patterns.play)
+	const embed = EmbedBuilder.from(embedPatterns.play)
 		.setTitle(":notes:  Added in the queue")
 		.addFields([
 			{
@@ -124,7 +135,7 @@ player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
 	if (!queue.metadata.message) return
 
 	const channel = queue.metadata.message.channel
-	const embed = EmbedBuilder.from(patterns.play)
+	const embed = buildEmbed(embedPatterns.play)
 		.setTitle(`:notes:  ${tracks.length} tracks have been added in the queue`)
 		.addFields([
 			{
