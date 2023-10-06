@@ -5,7 +5,7 @@ const { checkQueuePlayer } = require("./stop")
 
 module.exports = {
 	name: "shuffle",
-	description: "I'll shuffle the tracks in the current playlist",
+	description: "I'll shuffle the tracks in the current queue",
 	run: run,
 }
 

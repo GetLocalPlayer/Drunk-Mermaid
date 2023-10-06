@@ -117,7 +117,7 @@ async function reportPlayerStart(channel, track) {
 }
 
 
-async function run(message, url) {
+async function run(message, url, omitReport) {
 	if (!await checkVoiceChannel(message)) return
 
 	if (!url) {
@@ -133,15 +133,17 @@ async function run(message, url) {
 			searchEngine: QueryType.AUTO,
 			blockExtractors: QueryType.FILE,
 		})
-		if (queue.currentTrack === track) {
-			await reportPlayerStart(message.channel, track)
-		}
-		if (queue.getSize()) {
-			if (searchResult.tracks.length > 1) {
-				await reportAddedTracks(message.channel, queue, searchResult.tracks)
+		if (!omitReport) {
+			if (queue.currentTrack === track) {
+				await reportPlayerStart(message.channel, track)
 			}
-			else {
-				await reportAddedTrack(message.channel, queue, track)
+			if (queue.getSize()) {
+				if (searchResult.tracks.length > 1) {
+					await reportAddedTracks(message.channel, queue, searchResult.tracks)
+				}
+				else {
+					await reportAddedTrack(message.channel, queue, track)
+				}
 			}
 		}
 		return [queue, track, searchResult, extractor]

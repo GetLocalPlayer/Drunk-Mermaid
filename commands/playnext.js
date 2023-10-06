@@ -17,25 +17,26 @@ const embedPatterns = {
 }
 
 
-async function run(message, url) {
-	try {
-		const [queue, track] = await play(message, url)
+async function reportNextTrack(channel, track) {
+	const embed = buildEmbed(embedPatterns.playnext)
+		.addFields([
+			{
+				name: " ",
+				value: `${track.title}`,
+				inline: false,
+			},
+		])
+	await channel.send({ embeds: [embed] })
+}
 
-		if (queue.currentTrack !== track) {
-			queue.moveTrack(track, 0)
-			const embed = buildEmbed(embedPatterns.playnext)
-				.addFields([
-					{
-						name: " ",
-						value: `${track.title}`,
-						inline: false,
-					},
-				])
-			await message.channel.send({ embeds: [embed] })
-		}
+
+async function run(message, url, omitReport) {
+	const [queue, track, searchResult, extractor] = await play(message, url)
+
+	if (queue.currentTrack !== track) {
+		queue.moveTrack(track, 0)
+		if (!omitReport) await reportNextTrack(message.channel, track)
 	}
-	catch (err) {
-		return console.log(err)
-	}
+	return [queue, track, searchResult, extractor]
 }
 
