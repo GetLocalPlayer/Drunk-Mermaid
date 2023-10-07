@@ -3,7 +3,7 @@ const { buildEmbed, checkVoiceChannel } = require("./play")
 const { checkQueuePlayer } = require("./stop")
 
 
-const MAX_TRACKS_TO_SHOW = 15
+const MAX_TRACKS_TO_SHOW = 10
 const COMMAND = "list"
 const SUBCOMMAND = "-all"
 
@@ -77,7 +77,7 @@ async function run(message, subcommand) {
 			embed.addFields([
 				{
 					"name": " ",
-					"value": `> **${trackCount}.** _${spliced.shift().title}_`,
+					"value": `**${trackCount}.** _${spliced.shift().title}_`,
 					"inline": false,
 				},
 			])

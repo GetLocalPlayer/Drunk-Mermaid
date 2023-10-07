@@ -1,41 +1,38 @@
-const { buildEmbed, run: play } = require("./play")
+const { EmbedBuilder } = require("discord.js")
+const { run: play } = require("./play")
 
 
 module.exports = {
 	name: "playnext",
 	description: "I'll put the track I find by the given link or request in the begginning of the queue",
 	run: run,
+
 }
 
 
-const embedPatterns = {
-	playnext: {
-		color: 0x00ffe6,
-		type: "rich",
-		title: ":arrow_heading_up:  Next track to play:",
-	},
+const embedPattern = {
+	color: 0x00ffe6,
+	type: "rich",
+	title: ":arrow_heading_up:  A track has been moved in the beginning of the queue:",
 }
 
 
-async function reportNextTrack(channel, track) {
-	const embed = buildEmbed(embedPatterns.playnext)
-		.addFields([
-			{
-				name: " ",
-				value: `${track.title}`,
-				inline: false,
-			},
-		])
-	await channel.send({ embeds: [embed] })
-}
-
-
-async function run(message, url, omitReport) {
+async function run(message, url) {
 	const [queue, track, searchResult, extractor] = await play(message, url)
 
-	if (queue && queue.currentTrack !== track) {
+	if (queue.currentTrack !== track) {
+		delete queue.metadata.channel
 		queue.moveTrack(track, 0)
-		if (!omitReport) await reportNextTrack(message.channel, track)
+		queue.metadata.channel = message.channel
+		const embed = EmbedBuilder.from(embedPattern)
+			.addFields([
+				{
+					name: " ",
+					value: `${track.title}`,
+					inline: false,
+				},
+			])
+		await message.channel.send({ embeds: [embed] })
 	}
 	return [queue, track, searchResult, extractor]
 }

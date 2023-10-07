@@ -8,7 +8,6 @@ module.exports = {
 	run: run,
 	checkVoiceChannel: checkVoiceChannel,
 	buildEmbed: buildEmbed,
-	reportPlayerStart: reportPlayerStart,
 }
 
 
@@ -28,11 +27,6 @@ const embedPatterns = {
 		type: "rich",
 		title: ":no_entry_sign:  No track found.",
 	},
-	play: {
-		color: 0x00ffe6,
-		type: "rich",
-		title: ":musical_note:  Start playing:",
-	},
 }
 
 
@@ -51,72 +45,6 @@ async function checkVoiceChannel(message) {
 }
 
 
-async function reportAddedTracks(channel, queue, tracks) {
-	const embed = buildEmbed(embedPatterns.play)
-		.setTitle(`:notes:  ${queue.getSize() >= tracks.length ? tracks.length : tracks.length - 1} tracks have been added in the queue`)
-		.addFields([
-			{
-				name: "Tracks in the queue:",
-				value: ` ${queue.getSize()}`,
-				inline: true,
-			},
-			{
-				name: "Queue total duration:",
-				value: `${queue.durationFormatted}`,
-				inline: true,
-			},
-		])
-	await channel.send({ "embeds": [embed] })
-}
-
-
-async function reportAddedTrack(channel, queue, track) {
-	const embed = buildEmbed(embedPatterns.play)
-		.setTitle(":notes:  Track have been added in the queue:")
-		.addFields([
-			{
-				name: " ",
-				value: track.title,
-				inline: false,
-			},
-			{
-				name: " ",
-				value: `**Duration:**  ${track.duration}`,
-				inline: false,
-			},
-			{
-				name: "Tracks in the queue:",
-				value: `${queue.getSize()}`,
-				inline: true,
-			},
-			{
-				name: "Queue duration:",
-				value: `${queue.durationFormatted}`,
-				inline: true,
-			},
-		])
-	await channel.send({ "embeds": [embed] })
-}
-
-
-async function reportPlayerStart(channel, track) {
-	const embed = buildEmbed(embedPatterns.play)
-		.addFields([
-			{
-				name: " ",
-				value: track.title,
-				inline: false,
-			},
-			{
-				name: " ",
-				value: `**Duration:** ${track.duration}`,
-				inline: false,
-			},
-		])
-	await channel.send({ "embeds": [embed] })
-}
-
-
 async function run(message, url, omitReport) {
 	if (!await checkVoiceChannel(message)) return
 
@@ -132,20 +60,10 @@ async function run(message, url, omitReport) {
 		const { queue, track, searchResult, extractor } = await player.play(voiceChannel, url, {
 			searchEngine: QueryType.AUTO,
 			blockExtractors: QueryType.FILE,
+			nodeOptions: {
+				metadata: omitReport ? null : { channel: message.channel },
+			},
 		})
-		if (!omitReport) {
-			if (queue.currentTrack === track) {
-				await reportPlayerStart(message.channel, track)
-			}
-			if (queue.getSize()) {
-				if (searchResult.tracks.length > 1) {
-					await reportAddedTracks(message.channel, queue, searchResult.tracks)
-				}
-				else {
-					await reportAddedTrack(message.channel, queue, track)
-				}
-			}
-		}
 		return [queue, track, searchResult, extractor]
 	}
 	catch (err) {

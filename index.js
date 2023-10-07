@@ -24,8 +24,10 @@ client.once(Events.ClientReady, c => {
 })
 
 
-client.commands = require("./commands")
+require("./events")
 
+
+client.commands = require("./commands")
 
 client.on(Events.MessageCreate, async (message) => {
 	if (message.author.id === client.user.id) return

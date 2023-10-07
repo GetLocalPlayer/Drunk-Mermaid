@@ -10,7 +10,7 @@ module.exports = {
 
 
 async function run(message, url) {
-	const [queue, track, searchResult, extractor] = await playnext(message, url, true)
+	const [queue, track, searchResult, extractor] = await playnext(message, url)
 	if (queue.getSize()) {
 		await skip(message)
 	}

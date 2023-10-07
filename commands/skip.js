@@ -1,5 +1,5 @@
 const { usePlayer } = require("discord-player");
-const { buildEmbed, checkVoiceChannel, reportPlayerStart } = require("./play")
+const { checkVoiceChannel } = require("./play")
 const { checkQueuePlayer } = require("./stop")
 
 
@@ -7,30 +7,26 @@ module.exports = {
 	name: "skip",
 	description: "I'll skip currently playing track",
 	run: run,
-}
-
-const embedPatterns = {
-	skip: {
-		"color": 0x00ffe6,
-		"type": "rich",
-		"title": ":track_next:  Skip current track",
-	},
+	queueEventSkip: "audioTrackSkip",
 }
 
 
-async function run(message, omitSkipReport, omitPlayReport) {
+async function run(message) {
 	if (!await checkVoiceChannel(message)) return
 	if (!await checkQueuePlayer(message)) return
 
 	const queuePlayer = usePlayer(message.guildId)
 
 	if (queuePlayer.skip()) {
-		if (!omitSkipReport) {
-			await message.channel.send({ "embeds": [buildEmbed(embedPatterns.skip)] })
-		}
-		if (queuePlayer.queue.currentTrack && !omitPlayReport) {
-			await reportPlayerStart(message.channel, queuePlayer.queue.currentTrack)
-		}
+		/*
+			Looks like default `playerSkip` event isn't what it
+			seems to be. API says:
+				* Emitted when the audio player skips current track
+			SO do the docs, but comment section in "Additing Events" says:
+				// Emitted when the audio player fails to load the stream for a song
+			Anyway, doesn't seem like `.skip()` emmits the event.
+		*/
+		queuePlayer.queue.emit(module.exports.queueEventSkip, queuePlayer.queue, queuePlayer.queue.currentTrack)
 	}
 }
 
