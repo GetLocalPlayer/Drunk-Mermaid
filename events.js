@@ -19,6 +19,18 @@ const embedPatterns = {
 }
 
 
+player.events.on(GuildQueueEvent.error, (queue, error) => {
+	console.log(`General player error event: ${error.message}`)
+	console.log(error)
+})
+
+
+player.events.on(GuildQueueEvent.playerError, (queue, error) => {
+	console.log(`Player error event: ${error.message}`);
+	console.log(error);
+})
+
+
 player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
 	if (!queue.metadata || !queue.metadata.channel) return
 
@@ -41,6 +53,7 @@ player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
 
 player.events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
 	if (!queue.metadata || !queue.metadata.channel)	return
+	if (!queue.currentTrack) return
 
 	const embed = EmbedBuilder.from(embedPatterns.play)
 		.setTitle(":notes:  Track have been added in the queue:")

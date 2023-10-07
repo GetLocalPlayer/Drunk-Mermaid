@@ -17,22 +17,24 @@ const embedPattern = {
 }
 
 
-async function run(message, url) {
-	const [queue, track, searchResult, extractor] = await play(message, url)
+async function run(message, url, moveSilently, addSilently) {
+	const [queue, track, searchResult, extractor] = await play(message, url, addSilently)
 
 	if (queue.currentTrack !== track) {
 		delete queue.metadata.channel
 		queue.moveTrack(track, 0)
 		queue.metadata.channel = message.channel
-		const embed = EmbedBuilder.from(embedPattern)
-			.addFields([
-				{
-					name: " ",
-					value: `${track.title}`,
-					inline: false,
-				},
-			])
-		await message.channel.send({ embeds: [embed] })
+		if (!moveSilently) {
+			const embed = EmbedBuilder.from(embedPattern)
+				.addFields([
+					{
+						name: " ",
+						value: `${track.title}`,
+						inline: false,
+					},
+				])
+			await message.channel.send({ embeds: [embed] })
+		}
 	}
 	return [queue, track, searchResult, extractor]
 }

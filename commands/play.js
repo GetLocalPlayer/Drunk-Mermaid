@@ -1,4 +1,4 @@
-const { useMainPlayer, QueryType } = require("discord-player");
+const { useMainPlayer, usePlayer, QueryType } = require("discord-player");
 const { EmbedBuilder } = require ("discord.js");
 
 
@@ -45,7 +45,7 @@ async function checkVoiceChannel(message) {
 }
 
 
-async function run(message, url, omitReport) {
+async function run(message, url, silent) {
 	if (!await checkVoiceChannel(message)) return
 
 	if (!url) {
@@ -57,13 +57,16 @@ async function run(message, url, omitReport) {
 	const player = useMainPlayer()
 
 	try {
+		const queuePlayer = usePlayer(message.guildId)
+		if (queuePlayer && queuePlayer.queue && silent) queuePlayer.queue.metadata = null
 		const { queue, track, searchResult, extractor } = await player.play(voiceChannel, url, {
 			searchEngine: QueryType.AUTO,
 			blockExtractors: QueryType.FILE,
 			nodeOptions: {
-				metadata: omitReport ? null : { channel: message.channel },
+				metadata: silent ? null : { channel: message.channel },
 			},
 		})
+		queue.metadata = { channel: message.channel }
 		return [queue, track, searchResult, extractor]
 	}
 	catch (err) {
