@@ -1,4 +1,4 @@
-![Icon](reqources/icon.png)
+![Icon](resources/icon.png)
 
 # Drunk Mermaid
 
