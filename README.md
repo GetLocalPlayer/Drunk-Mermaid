@@ -1,2 +1,7 @@
+![Icon](reqources/icon.png)
+
 # Drunk Mermaid
- Music bot for discord
+
+Another music bot with a bunch of very basic commands.
+
+A primitive project to get in touch with javascript.
