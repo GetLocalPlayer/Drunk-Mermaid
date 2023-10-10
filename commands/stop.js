@@ -1,10 +1,12 @@
 const { usePlayer } = require("discord-player");
 const { buildEmbed, checkVoiceChannel } = require("./play");
+const { SlashCommandBuilder } = require("discord.js");
 
 
 module.exports = {
-	name: "stop",
-	description: "I'll stop playing",
+	builder: new SlashCommandBuilder()
+		.setName("stop")
+		.setDescription("I'll stop playing"),
 	run: run,
 	checkQueuePlayer: checkQueuePlayer,
 }
@@ -23,27 +25,27 @@ const embedPatterns = {
 }
 
 
-async function checkQueuePlayer(message) {
-	const queuePlayer = usePlayer(message.guildId)
+async function checkQueuePlayer(interatcion) {
+	const queuePlayer = usePlayer(interatcion.guildId)
 	if (!queuePlayer || !queuePlayer.queue.currentTrack) {
-		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)] })
+		await interatcion.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)], "ephemeral": true })
 		return false
 	}
 	return true
 }
 
 
-async function run(message) {
-	if (!await checkVoiceChannel(message)) return
-	if (!await checkQueuePlayer(message)) return
+async function run(interaction) {
+	if (!await checkVoiceChannel(interaction)) return
+	if (!await checkQueuePlayer(interaction)) return
 
-	const queuePlayer = usePlayer(message.guildId)
+	const queuePlayer = usePlayer(interaction.guildId)
 
 	if (!queuePlayer || !queuePlayer.queue.currentTrack) {
-		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)] })
+		await interaction.reply({ "embeds": [buildEmbed(embedPatterns.errorNothingIsPlaying)] })
 		return
 	}
 
 	queuePlayer.stop(true)
-	await message.channel.send({ "embeds": [buildEmbed(embedPatterns.stop)] })
+	await interaction.channel.send({ "embeds": [buildEmbed(embedPatterns.stop)] })
 }

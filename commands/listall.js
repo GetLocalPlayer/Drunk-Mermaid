@@ -4,13 +4,13 @@ const { checkQueuePlayer } = require("./stop")
 const { SlashCommandBuilder } = require("discord.js")
 
 
-const MAX_TRACKS_TO_SHOW = 10
+const TRACKS_PER_MESSAGE = 10
 
 
 module.exports = {
 	builder: new SlashCommandBuilder()
-		.setName("list")
-		.setDescription(`I'll show the list of next ${MAX_TRACKS_TO_SHOW} tracks currently in the queue`),
+		.setName("listall")
+		.setDescription("I'll send the whole list of tracks in the current queue in direct messages."),
 	run: run,
 }
 
@@ -28,7 +28,9 @@ async function run(interaction) {
 	if (!await checkQueuePlayer(interaction)) return
 
 	const queuePlayer = usePlayer(interaction.guildId)
-	const embed = buildEmbed(embedPatterns.list)
+	const tracks = queuePlayer.queue.tracks
+
+	let embed = buildEmbed(embedPatterns.list)
 
 	if (queuePlayer.queue.currentTrack) {
 		embed.addFields([
@@ -40,7 +42,6 @@ async function run(interaction) {
 		])
 	}
 
-	const tracks = queuePlayer.queue.tracks
 
 	if (!tracks.size) {
 		await interaction.reply({ "content": "The queue is empty.", "ephemeral": true })
@@ -55,30 +56,30 @@ async function run(interaction) {
 		},
 		{
 			"name": " ",
-			"value": `:notes:  **Tracks in the queue:** ${tracks.size}\n`,
+			"value": `:notes:  **Tracks in the queue:** ${tracks.length}\n`,
 			"inline": false,
 		},
 	])
 
+	const tracksArr = tracks.toArray()
+	let position = 1
 
-	for (let i = 0; i < MAX_TRACKS_TO_SHOW && i < tracks.size; i++) {
-		embed.addFields([
-			{
-				"name": " ",
-				"value": `**${i + 1}.** _${tracks.at(i).title}_`,
-				"inline": false,
-			},
-		])
+	interaction.reply({ "content": "Sending in direct messages", "ephemeral": true })
+
+	while (tracksArr.length) {
+		const spliced = tracksArr.splice(0, TRACKS_PER_MESSAGE - 1)
+		while (spliced.length) {
+			embed.addFields([
+				{
+					"name": " ",
+					"value": `**${position}.** _${spliced.shift().title}_`,
+					"inline": false,
+				},
+			])
+			position++
+		}
+		await interaction.member.send({ "embeds": [embed], "ephemeral": true })
+		embed = buildEmbed(embedPatterns.list)
 	}
-	if (tracks.size > MAX_TRACKS_TO_SHOW) {
-		embed.addFields([
-			{
-				"name": `:warning:  _I can show only ${MAX_TRACKS_TO_SHOW} tracks in a server chat at once. To get the whole list in direct messages use \`listall\` command._`,
-				"value": " ",
-				"inline": false,
-			},
-		])
-	}
-	await interaction.reply({ "embeds": [embed], "ephemeral": true })
 }
 

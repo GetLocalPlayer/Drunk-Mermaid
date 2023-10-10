@@ -3,10 +3,10 @@ const { Player } = require("discord-player")
 
 require("dotenv").config()
 
-const COMMAND_PREFIX = "dm!"
 
 // Create a new client instance
 const client = new Client({
+	restRequestTimeout: 60000,
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
@@ -26,35 +26,24 @@ client.once(Events.ClientReady, c => {
 
 require("./events")
 
+const { commands } = require("./commands")
 
-client.commands = require("./commands")
 
-client.on(Events.MessageCreate, async (message) => {
-	if (message.author.id === client.user.id) return
+client.on(Events.InteractionCreate, async (interraction) => {
+	if (!interraction.isChatInputCommand()) return
 
-	const cmdPrefix = COMMAND_PREFIX.toLowerCase()
+	const cmd = commands[interraction.commandName]
 
-	if (message.content.slice(0, cmdPrefix.length).toLowerCase() === cmdPrefix) {
-		const list = message.content.split(" ").filter((v) => v !== "")
-		const cmd = list[1].toLowerCase()
+	if (!cmd) {
+		console.error(`No command found: "${interraction.commandName}"`)
+		return
+	}
 
-		if (cmd === "") {
-			await message.reply("> Empty command")
-		}
-		else if (cmd == undefined) {
-			await message.reply(`> "${message.content.slice(0, cmdPrefix.length)}" must be followed by a command`)
-		}
-		else if (!(cmd in client.commands)) {
-			await message.reply(`> No "${list[1]}" command found`)
-		}
-		else {
-			try {
-				await client.commands[cmd](message, ...list.slice(2))
-			}
-			catch (err) {
-				console.log(err)
-			}
-		}
+	try {
+		await cmd(interraction)
+	}
+	catch (err) {
+		console.log(err)
 	}
 })
 

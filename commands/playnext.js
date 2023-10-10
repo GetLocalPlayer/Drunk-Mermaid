@@ -1,10 +1,16 @@
-const { EmbedBuilder } = require("discord.js")
+const { EmbedBuilder, SlashCommandBuilder } = require("discord.js")
 const { run: play } = require("./play")
 
 
 module.exports = {
-	name: "playnext",
-	description: "I'll put the track I find by the given link or request in the begginning of the queue",
+	builder: new SlashCommandBuilder()
+		.setName("playnext")
+		.setDescription("I'll put the track I find by the given link or request in the begginning of the queue")
+		.addStringOption(option =>
+			option
+				.setName("track")
+				.setDescription("Link or title of the track")
+				.setRequired(true)),
 	run: run,
 
 }
@@ -17,13 +23,13 @@ const embedPattern = {
 }
 
 
-async function run(message, url, moveSilently, addSilently) {
-	const [queue, track, searchResult, extractor] = await play(message, url, addSilently)
+async function run(interaction, moveSilently, addSilently) {
+	const [queue, track, searchResult, extractor] = await play(interaction, addSilently)
 
 	if (queue.currentTrack !== track) {
-		delete queue.metadata.channel
+		queue.metadata.channel = null
 		queue.moveTrack(track, 0)
-		queue.metadata.channel = message.channel
+		queue.metadata.channel = interaction.channel
 		if (!moveSilently) {
 			const embed = EmbedBuilder.from(embedPattern)
 				.addFields([
@@ -33,7 +39,7 @@ async function run(message, url, moveSilently, addSilently) {
 						inline: false,
 					},
 				])
-			await message.channel.send({ embeds: [embed] })
+			await interaction.reply({ "embeds": [embed] })
 		}
 	}
 	return [queue, track, searchResult, extractor]

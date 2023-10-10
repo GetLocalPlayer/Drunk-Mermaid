@@ -1,10 +1,20 @@
-const { useMainPlayer, usePlayer, QueryType } = require("discord-player");
-const { EmbedBuilder } = require ("discord.js");
+const { useMainPlayer, QueryType } = require("discord-player");
+const { EmbedBuilder, SlashCommandBuilder } = require ("discord.js");
 
 
 module.exports = {
-	name: "play",
-	description: "I'll start playing the track I find by the given link or request, for instance: `dm! play Never Gonna Give You Up`",
+	builder: new SlashCommandBuilder()
+		.setName("play")
+		.setDescription("I'll start playing the track I find by the given link or request")
+		.addStringOption(option =>
+			option
+				.setName("track")
+				.setDescription("Link or title of the track")
+				.setRequired(true))
+		.addBooleanOption(option =>
+			option
+				.setName("shuffle")
+				.setDescription("Shuffle the tracks before additing them in the queue")),
 	run: run,
 	checkVoiceChannel: checkVoiceChannel,
 	buildEmbed: buildEmbed,
@@ -35,44 +45,44 @@ function buildEmbed(pattern) {
 }
 
 
-async function checkVoiceChannel(message) {
-	const voiceChannel = message.member.voice.channel
+async function checkVoiceChannel(interaction) {
+	const voiceChannel = interaction.member.voice.channel
 	if (!(voiceChannel)) {
-		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNoVoice)] })
+		await interaction.reply({ "embeds": [buildEmbed(embedPatterns.errorNoVoice)], "ephemeral": true })
 		return false
 	}
 	return true
 }
 
 
-async function run(message, url, silent) {
-	if (!await checkVoiceChannel(message)) return
+async function run(interaction, silent) {
+	if (!await checkVoiceChannel(interaction)) return
 
-	if (!url) {
-		await message.reply({ "embeds": [buildEmbed(embedPatterns.errorInvalidRequest)] })
+	const option = interaction.options.get("track")
+	if (!option) {
+		await interaction.reply({ "embeds": [buildEmbed(embedPatterns.errorInvalidRequest)], "ephemeral": true })
 		return
 	}
 
-	const voiceChannel = message.member.voice.channel
+	const voiceChannel = interaction.member.voice.channel
 	const player = useMainPlayer()
 
 	try {
-		const queuePlayer = usePlayer(message.guildId)
-		if (queuePlayer && queuePlayer.queue && silent) queuePlayer.queue.metadata = null
-		const { queue, track, searchResult, extractor } = await player.play(voiceChannel, url, {
+		const metadata = { "channel": interaction.channel }
+		const { queue, track, searchResult, extractor } = await player.play(voiceChannel, option.value, {
 			searchEngine: QueryType.AUTO,
 			blockExtractors: QueryType.FILE,
 			nodeOptions: {
-				metadata: silent ? null : { channel: message.channel },
+				metadata: silent ? { "channel": null } : metadata,
 			},
 		})
-		queue.metadata = { channel: message.channel }
+		queue.metadata = metadata
 		return [queue, track, searchResult, extractor]
 	}
 	catch (err) {
 		if (err.name == "ERR_NO_RESULT") {
-			await message.reply({ "embeds": [buildEmbed(embedPatterns.errorNoTrackFound)] })
-			return [null, null, null, null]
+			await interaction.reply({ "embeds": [buildEmbed(embedPatterns.errorNoTrackFound)], "ephemeral": true })
+			return [undefined, undefined, undefined, undefined]
 		}
 		throw err
 	}

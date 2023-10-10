@@ -1,6 +1,6 @@
 const { useMainPlayer, GuildQueueEvent } = require("discord-player");
 const { EmbedBuilder } = require("discord.js");
-const { queueEventSkip } = require("./commands/skip")
+const { queueEventSkip, queueEventSkipTo } = require("./commands/skip")
 
 
 const player = useMainPlayer()
@@ -14,7 +14,11 @@ const embedPatterns = {
 	skip: {
 		"color": 0x00ffe6,
 		"type": "rich",
-		"title": ":track_next:  Skip current track",
+		"title": ":track_next:  Skip current track.",
+	},
+	skipTo: {
+		"color": 0x00ffe6,
+		"type": "rich",
 	},
 }
 
@@ -107,4 +111,13 @@ player.events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
 player.events.on(queueEventSkip, async (queue) => {
 	if (!queue.metadata || !queue.metadata.channel)	return
 	await queue.metadata.channel.send({ embeds: [EmbedBuilder.from(embedPatterns.skip)] })
+})
+
+
+player.events.on(queueEventSkipTo, async (queue, tracks, position) => {
+	if (!queue.metadata || !queue.metadata.channel)	return
+	await queue.metadata.channel.send({ embeds: [
+		EmbedBuilder.from(embedPatterns.skip)
+			.setTitle(`:track_next:  Skip current and ${position - 1} tracks in the queue.`),
+	] })
 })
