@@ -22,7 +22,7 @@ const embedPatterns = {
 	errorInvalidPosition: {
 		color: 0xff0000,
 		type: "rich",
-		title: ":no_entry_sign:  Invalid track queue positin.",
+		title: ":no_entry_sign:  Invalid track queue position.",
 	},
 }
 
