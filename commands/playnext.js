@@ -23,8 +23,8 @@ const embedPattern = {
 }
 
 
-async function run(interaction, moveSilently, addSilently) {
-	const [queue, track, searchResult, extractor] = await play(interaction, addSilently)
+async function run(interaction, moveSilently, silentQueueEvent) {
+	const [queue, track, searchResult, extractor] = await play(interaction, silentQueueEvent)
 
 	if (queue.currentTrack !== track) {
 		queue.metadata.channel = null

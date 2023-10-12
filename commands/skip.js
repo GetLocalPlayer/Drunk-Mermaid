@@ -1,4 +1,4 @@
-const { usePlayer } = require("discord-player");
+const { usePlayer, useMainPlayer } = require("discord-player");
 const { checkVoiceChannel, buildEmbed } = require("./play")
 const { checkQueuePlayer } = require("./stop");
 const { SlashCommandBuilder } = require("discord.js");
@@ -13,8 +13,12 @@ module.exports = {
 				.setName("position")
 				.setDescription("The position of the track in the queue to which you want to skip")),
 	run: run,
-	queueEventSkip: "audioTrackSkip",
-	queueEventSkipTo: "audioTrackSkipTo",
+}
+
+
+const events = {
+	skip: "audioTrackSkip",
+	skipTo: "audioTrackSkipTo",
 }
 
 
@@ -23,6 +27,15 @@ const embedPatterns = {
 		color: 0xff0000,
 		type: "rich",
 		title: ":no_entry_sign:  Invalid track queue position.",
+	},
+	skip: {
+		"color": 0x00ffe6,
+		"type": "rich",
+		"title": ":track_next:  Skip current track.",
+	},
+	skipTo: {
+		"color": 0x00ffe6,
+		"type": "rich",
 	},
 }
 
@@ -44,7 +57,7 @@ async function run(interaction) {
 					// Emitted when the audio player fails to load the stream for a song
 				Anyway, doesn't seem like `.skip()` emmits the event.
 			*/
-			queuePlayer.queue.emit(module.exports.queueEventSkip, queuePlayer.queue, queuePlayer.queue.currentTrack)
+			queuePlayer.queue.emit(events.skip, queuePlayer.queue, queuePlayer.queue.currentTrack)
 		}
 	}
 	else {
@@ -53,7 +66,7 @@ async function run(interaction) {
 
 		if (position > 0 && position <= queue.getSize()) {
 			if (queuePlayer.skipTo(queue.tracks.at(position - 1))) {
-				queuePlayer.queue.emit(module.exports.queueEventSkipTo, queue, queue.currentTrack, position)
+				queuePlayer.queue.emit(events.skipTo, queue, queue.currentTrack, position)
 			}
 		}
 		else {
@@ -62,3 +75,17 @@ async function run(interaction) {
 	}
 }
 
+
+useMainPlayer().events.on(events.skip, async (queue) => {
+	if (!queue.metadata || !queue.metadata.channel)	return
+	await queue.metadata.channel.send({ embeds: [buildEmbed(embedPatterns.skip)] })
+})
+
+
+useMainPlayer().events.on(events.skipTo, async (queue, tracks, position) => {
+	if (!queue.metadata || !queue.metadata.channel)	return
+	await queue.metadata.channel.send({ embeds: [
+		buildEmbed(embedPatterns.skip)
+			.setTitle(`:track_next:  Skip current and ${position - 1} tracks in the queue.`),
+	] })
+})

@@ -1,4 +1,4 @@
-const { useMainPlayer, QueryType } = require("discord-player");
+const { useMainPlayer, QueryType, GuildQueueEvent } = require("discord-player");
 const { EmbedBuilder, SlashCommandBuilder } = require ("discord.js");
 
 
@@ -37,6 +37,11 @@ const embedPatterns = {
 		type: "rich",
 		title: ":no_entry_sign:  No track found.",
 	},
+	play: {
+		color: 0x00ffe6,
+		type: "rich",
+		title: ":musical_note:  Start playing:",
+	},
 }
 
 
@@ -55,28 +60,24 @@ async function checkVoiceChannel(interaction) {
 }
 
 
-async function run(interaction, silent) {
+async function run(interaction, silentPlayEvent, silentQueueEvent) {
 	if (!await checkVoiceChannel(interaction)) return
 
-	const option = interaction.options.get("track")
-	if (!option) {
-		await interaction.reply({ "embeds": [buildEmbed(embedPatterns.errorInvalidRequest)], "ephemeral": true })
-		return
-	}
-
-	const voiceChannel = interaction.member.voice.channel
-	const player = useMainPlayer()
-
 	try {
-		const metadata = { "channel": interaction.channel }
-		const { queue, track, searchResult, extractor } = await player.play(voiceChannel, option.value, {
-			searchEngine: QueryType.AUTO,
-			blockExtractors: QueryType.FILE,
-			nodeOptions: {
-				metadata: silent ? { "channel": null } : metadata,
-			},
-		})
-		queue.metadata = metadata
+		const { queue, track, searchResult, extractor } = await useMainPlayer().play(
+			interaction.member.voice.channel,
+			interaction.options.get("track").value,
+			{
+				"searchEngine": QueryType.AUTO,
+				"blockExtractors": QueryType.FILE,
+				"nodeOptions": {
+					"metadata": {
+						"channel": interaction.channel,
+						"silentPlayEvent": silentPlayEvent,
+						"silentQueueEvent": silentQueueEvent,
+					},
+				},
+			})
 		return [queue, track, searchResult, extractor]
 	}
 	catch (err) {
@@ -87,3 +88,76 @@ async function run(interaction, silent) {
 		throw err
 	}
 }
+
+
+useMainPlayer().events.on(GuildQueueEvent.playerStart, async (queue, track) => {
+	if (!queue.metadata || !queue.metadata.channel || queue.metadata.silentPlayEvent) return
+
+	const embed = EmbedBuilder.from(embedPatterns.play)
+		.addFields([
+			{
+				name: " ",
+				value: track.title,
+				inline: false,
+			},
+			{
+				name: " ",
+				value: `**Duration:** ${track.duration}`,
+				inline: false,
+			},
+		])
+	await queue.metadata.channel.send({ embeds: [embed] })
+})
+
+
+useMainPlayer().events.on(GuildQueueEvent.audioTrackAdd, async (queue, track) => {
+	if (!queue.metadata || !queue.metadata.channel || queue.metadata.silentQueueEvent) return
+	if (!queue.currentTrack) return
+
+	const embed = EmbedBuilder.from(embedPatterns.play)
+		.setTitle(":notes:  Track have been added in the queue:")
+		.addFields([
+			{
+				name: " ",
+				value: track.title,
+				inline: false,
+			},
+			{
+				name: " ",
+				value: `**Duration:**  ${track.duration}`,
+				inline: false,
+			},
+			{
+				name: "Tracks in the queue:",
+				value: `${queue.getSize()}`,
+				inline: true,
+			},
+			{
+				name: "Queue duration:",
+				value: `${queue.durationFormatted}`,
+				inline: true,
+			},
+		])
+	await queue.metadata.channel.send({ embeds: [embed] })
+})
+
+
+useMainPlayer().events.on(GuildQueueEvent.audioTracksAdd, async (queue, tracks) => {
+	if (!queue.metadata || !queue.metadata.channel || queue.metadata.silentQueueEvent) return
+
+	const embed = EmbedBuilder.from(embedPatterns.play)
+		.setTitle(`:notes:  ${queue.getSize() >= tracks.length ? tracks.length : tracks.length - 1} tracks have been added in the queue`)
+		.addFields([
+			{
+				name: "Tracks in the queue:",
+				value: ` ${queue.getSize()}`,
+				inline: true,
+			},
+			{
+				name: "Queue total duration:",
+				value: `${queue.durationFormatted}`,
+				inline: true,
+			},
+		])
+	await queue.metadata.channel.send({ embeds: [embed] })
+})
