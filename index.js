@@ -1,5 +1,6 @@
 const { Client, Events, GatewayIntentBits } = require("discord.js")
-const { Player } = require("discord-player")
+const { Player, GuildQueueEvent } = require("discord-player")
+
 
 require("dotenv").config()
 
@@ -24,9 +25,19 @@ client.once(Events.ClientReady, c => {
 })
 
 
-require("./events")
+player.events.on(GuildQueueEvent.error, (queue, error) => {
+	console.log(`General player error event: ${error.message}`)
+	console.log(error)
+})
 
-const { commands } = require("./commands")
+
+player.events.on(GuildQueueEvent.playerError, (queue, error) => {
+	console.log(`Player error event: ${error.message}`);
+	console.log(error);
+})
+
+
+const { commands, builders } = require("./commands")
 
 
 client.on(Events.InteractionCreate, async (interraction) => {
@@ -47,5 +58,15 @@ client.on(Events.InteractionCreate, async (interraction) => {
 	}
 })
 
-// Log in to Discord with your client"s token
+
+const { registerCommands } = require("./register-commands")
+
+
+if (process.argv.includes("-registerCommands")) {
+	(async () => {
+		await registerCommands(process.env.DISCORD_TOKEN, builders, process.argv.includes("--globally"))
+	})()
+}
+
+
 client.login(process.env.DISCORD_TOKEN)

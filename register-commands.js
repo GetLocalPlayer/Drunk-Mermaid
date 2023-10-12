@@ -1,27 +1,20 @@
 const { REST, Routes } = require("discord.js");
-require("dotenv").config()
-
-/*
-	Standalone module to register slash-commands on dirscord
-	side. Copy-pasted from:
-	 https://discordjs.guide/creating-your-bot/command-deployment.html#guild-commands
-*/
-
-const { builders } = require("./commands")
 
 
-const commands = []
-
-for (const b of builders) {
-	commands.push(b.toJSON())
+module.exports = {
+	registerCommands: register,
 }
 
 
-// Construct and prepare an instance of the REST module
-const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+async function register(discordToken, builders, globally) {
+	const rest = new REST().setToken(discordToken)
 
-// and deploy your commands!
-async function register(globally) {
+	const commandsJSON = []
+
+	for (const b of builders) {
+		commandsJSON.push(b.toJSON())
+	}
+
 	try {
 		console.log(`Started refreshing ${builders.length} application (/) commands.`)
 
@@ -29,16 +22,12 @@ async function register(globally) {
 			Routes.applicationCommands(process.env.APPLIACTION_ID)
 			: Routes.applicationGuildCommands(process.env.APPLICATION_ID, process.env.TEST_GUILD_ID)
 		const data = await rest.put(appCommands,
-			{ body: commands },
-		);
+			{ body: commandsJSON },
+		)
 
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`)
 	}
 	catch (error) {
-		// And of course, make sure you catch and log any errors!
 		console.error(error)
 	}
 }
-
-
-"-globally" in process.argv ? register(true) : register()
