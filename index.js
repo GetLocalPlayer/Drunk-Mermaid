@@ -59,11 +59,9 @@ client.on(Events.InteractionCreate, async (interraction) => {
 })
 
 
-const { registerCommands } = require("./register-commands")
-
-
 if (process.argv.includes("-registerCommands")) {
-	(async () => {
+	const { registerCommands } = require("./register-commands")
+	;(async () => {
 		await registerCommands(process.env.DISCORD_TOKEN, builders, process.argv.includes("--globally"))
 	})()
 }

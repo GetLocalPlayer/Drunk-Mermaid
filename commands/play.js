@@ -73,8 +73,8 @@ async function run(interaction, silentPlayEvent, silentQueueEvent) {
 				"nodeOptions": {
 					"metadata": {
 						"channel": interaction.channel,
-						"silentPlayEvent": silentPlayEvent,
-						"silentQueueEvent": silentQueueEvent,
+						"silentPlayEvent": typeof silentPlayEvent === "boolean" ? silentPlayEvent : false,
+						"silentQueueEvent": typeof silentQueueEvent === "boolean" ? silentQueueEvent : false,
 					},
 				},
 			})
