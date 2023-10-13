@@ -72,7 +72,7 @@ async function run(interaction, silentPlayEvent, silentQueueEvent) {
 			})
 
 		const shuffleOption = interaction.options.get("shuffle")
-		if (shuffleOption && shuffleOption.value) {
+		if (searchResult.length > 1 && shuffleOption && shuffleOption.value) {
 			const tracks = searchResult.tracks
 			for (let i = tracks.length - 1; i >= 0; i--) {
 				const j = Math.floor(Math.random() * (i + 1))
