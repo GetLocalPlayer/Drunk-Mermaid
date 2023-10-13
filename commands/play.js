@@ -64,12 +64,30 @@ async function run(interaction, silentPlayEvent, silentQueueEvent) {
 	if (!await checkVoiceChannel(interaction)) return
 
 	try {
-		const { queue, track, searchResult, extractor } = await useMainPlayer().play(
-			interaction.member.voice.channel,
+		let searchResult = await useMainPlayer().search(
 			interaction.options.get("track").value,
 			{
 				"searchEngine": QueryType.AUTO,
 				"blockExtractors": QueryType.FILE,
+			})
+
+		const shuffleOption = interaction.options.get("shuffle")
+		if (shuffleOption && shuffleOption.value) {
+			const tracks = searchResult.tracks
+			for (let i = tracks.length - 1; i >= 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1))
+				const tmp = tracks[i]
+				tracks[i] = tracks[j]
+				tracks[j] = tmp
+			}
+			searchResult = searchResult.setTracks(tracks)
+		}
+
+		return await useMainPlayer().play(
+			interaction.member.voice.channel,
+			searchResult,
+			{
+				"searchEngine": QueryType.AUTO,
 				"nodeOptions": {
 					"metadata": {
 						"channel": interaction.channel,
@@ -78,7 +96,6 @@ async function run(interaction, silentPlayEvent, silentQueueEvent) {
 					},
 				},
 			})
-		return [queue, track, searchResult, extractor]
 	}
 	catch (err) {
 		if (err.name == "ERR_NO_RESULT") {

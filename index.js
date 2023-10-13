@@ -37,6 +37,11 @@ player.events.on(GuildQueueEvent.playerError, (queue, error) => {
 })
 
 
+/* player.events.on(GuildQueueEvent.debug, async (queue, message) => {
+	console.log(`Player debug event: ${message}`);
+}) */
+
+
 const { commands, builders } = require("./commands")
 
 
